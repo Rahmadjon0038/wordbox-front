@@ -3,15 +3,104 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 
 export default function PracticePage() {
-  const words = [
-    { en: "apple", uz: "olma" },
-    { en: "book", uz: "kitob" },
-    { en: "friend", uz: "do‘st" }
-  ]
+ const words = [
+  // Oddiy so'zlar
+  { en: "apple", uz: "olma" },
+  { en: "book", uz: "kitob" },
+  { en: "friend", uz: "do‘st" },
+
+  // Erkak va ayollar uchun
+  { en: "man", uz: "erkak" },
+  { en: "woman", uz: "ayol" },
+  { en: "boy", uz: "o‘g‘il bola" },
+  { en: "girl", uz: "qiz bola" },
+  { en: "father", uz: "ota" },
+  { en: "mother", uz: "ona" },
+  { en: "son", uz: "o‘g‘il" },
+  { en: "daughter", uz: "qiz" },
+  { en: "brother", uz: "aka / uka" },
+  { en: "sister", uz: "opa / singil" },
+  { en: "husband", uz: "er" },
+  { en: "wife", uz: "xotin / turmush o‘rtog‘i" },
+  { en: "uncle", uz: "amaki / tog‘a" },
+  { en: "aunt", uz: "amma / xola" },
+  { en: "nephew", uz: "jiyan (o‘g‘il)" },
+  { en: "niece", uz: "jiyan (qiz)" },
+  { en: "grandfather", uz: "bobo" },
+  { en: "grandmother", uz: "buvi" },
+  { en: "grandson", uz: "nabira (o‘g‘il)" },
+  { en: "granddaughter", uz: "nabira (qiz)" },
+  { en: "king", uz: "podsho" },
+  { en: "queen", uz: "qirolicha / malika" },
+  { en: "prince", uz: "shahzoda" },
+  { en: "princess", uz: "malikaxon" },
+  { en: "actor", uz: "aktyor" },
+  { en: "actress", uz: "aktrisa" },
+  { en: "waiter", uz: "ofitsiant (erkak)" },
+  { en: "waitress", uz: "ofitsiantka (ayol)" },
+  { en: "policeman", uz: "militsioner (erkak)" },
+  { en: "policewoman", uz: "militsioner (ayol)" },
+  { en: "gentleman", uz: "janob" },
+  { en: "lady", uz: "xonim" },
+  { en: "hero", uz: "qahramon (erkak)" },
+  { en: "heroine", uz: "qahramon (ayol)" },
+  { en: "host", uz: "mezbon (erkak)" },
+  { en: "hostess", uz: "mezbon (ayol)" },
+  { en: "steward", uz: "parvoz xodimi (erkak)" },
+  { en: "stewardess", uz: "parvoz xodimasi (ayol)" },
+  { en: "bachelor", uz: "yolg‘iz (uylanmagan)" },
+  { en: "spinster", uz: "turmushga chiqmagan ayol" },
+  { en: "wizard", uz: "sehrgar (erkak)" },
+  { en: "witch", uz: "sehrgar (ayol)" },
+  { en: "duke", uz: "gersog" },
+  { en: "duchess", uz: "gersoginya" },
+  { en: "lord", uz: "janob / hukmdor" },
+  { en: "lady", uz: "xonim" },
+  { en: "emperor", uz: "imperator" },
+  { en: "empress", uz: "imperator ayol" },
+  { en: "god", uz: "xudo (erkak ko‘rinishida)" },
+  { en: "goddess", uz: "ma’buda" },
+  { en: "monk", uz: "rohib" },
+  { en: "nun", uz: "rohiba" },
+
+  // Hayvonlarda
+  { en: "bull", uz: "buqa" },
+  { en: "cow", uz: "sigir" },
+  { en: "rooster", uz: "xo‘roz" },
+  { en: "hen", uz: "tovuq" },
+  { en: "stallion", uz: "ayg‘ir" },
+  { en: "mare", uz: "biy" },
+  { en: "ram", uz: "qo‘chqor" },
+  { en: "ewe", uz: "qo‘y" },
+  { en: "dog", uz: "it (erkak)" },
+  { en: "bitch", uz: "it (urg‘ochi)" },
+  { en: "tiger", uz: "yo‘lbars (erkak)" },
+  { en: "tigress", uz: "yo‘lbars (urg‘ochi)" },
+  { en: "lion", uz: "sher (erkak)" },
+  { en: "lioness", uz: "sher (urg‘ochi)" },
+
+  // Boshqa umumiy so'zlar
+  { en: "great", uz: "zo‘r / ajoyib" },
+  { en: "bad", uz: "yomon" },
+  { en: "sad", uz: "xafa / g‘amgin" },
+  { en: "hobby", uz: "qiziqish / hobi" },
+  { en: "favorite", uz: "sevimli" },
+  { en: "study", uz: "o‘qish / o‘rganish" },
+  { en: "what", uz: "nima" },
+  { en: "which", uz: "qaysi" },
+  { en: "why", uz: "nega" },
+  { en: "low", uz: "past" },
+  { en: "well", uz: "yaxshi" },
+  { en: "make sure", uz: "ishonch hosil qilmoq" },
+  { en: "general", uz: "umumiy" },
+  { en: "live", uz: "yashamoq / jonli" }
+]
+
+
 
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState("")
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState(null) // correct | wrong | null
   const [learned, setLearned] = useState([])
   const [unlearned, setUnlearned] = useState([])
   const [finished, setFinished] = useState(false)
@@ -20,9 +109,9 @@ export default function PracticePage() {
     if (answer.trim().toLowerCase() === words[index].uz.toLowerCase()) {
       setResult("correct")
       setLearned([...learned, words[index]])
+      setTimeout(() => nextWord(), 1000) // 1 sekunddan keyin avtomatik keyingiga o'tadi
     } else {
       setResult("wrong")
-      setUnlearned([...unlearned, words[index]])
     }
   }
 
@@ -34,6 +123,11 @@ export default function PracticePage() {
     } else {
       setFinished(true)
     }
+  }
+
+  const skipWord = () => {
+    setUnlearned([...unlearned, words[index]])
+    nextWord()
   }
 
   return (
@@ -75,26 +169,23 @@ export default function PracticePage() {
               <p className="text-green-600 font-semibold mt-3 text-center">✅ Correct!</p>
             )}
             {result === "wrong" && (
-              <p className="text-red-600 font-semibold mt-3 text-center">❌ Wrong!</p>
+              <p className="text-red-600 font-semibold mt-3 text-center">❌ Wrong! Try again.</p>
             )}
 
             {/* Buttons */}
             <div className="flex justify-center gap-4 mt-6">
-              {!result ? (
-                <button
-                  onClick={checkAnswer}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Check
-                </button>
-              ) : (
-                <button
-                  onClick={nextWord}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                >
-                  Next
-                </button>
-              )}
+              <button
+                onClick={checkAnswer}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Check
+              </button>
+              <button
+                onClick={skipWord}
+                className="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition"
+              >
+                Skip
+              </button>
             </div>
           </div>
         ) : (
