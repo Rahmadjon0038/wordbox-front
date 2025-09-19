@@ -1,6 +1,9 @@
 'use client'
 import React, { useState } from 'react'
 import Link from 'next/link'
+import Login from '@/components/ui/modals/login'
+import Register from '@/components/ui/modals/register'
+import Cookies from 'js-cookie'
 
 export default function WordMasterHome() {
   return (
@@ -19,6 +22,8 @@ export default function WordMasterHome() {
 function Navbar() {
   const [open, setOpen] = useState(false)
 
+  const role = Cookies.get('role');
+
   return (
     <nav className="w-full bg-white/60 backdrop-blur-md sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-4 flex items-center justify-between">
@@ -34,12 +39,19 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           <Link href="#features" className="text-gray-600 hover:text-gray-900">Features</Link>
           <Link href="#how" className="text-gray-600 hover:text-gray-900">How it works</Link>
-          <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
 
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="px-4 py-2 text-blue-600 font-medium border border-blue-600 rounded-lg hover:bg-blue-50 transition">Login</Link>
-            <Link href="/register" className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">Register</Link>
-          </div>
+
+
+          {role ? <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link> :
+            < div className="flex items-center gap-3">
+              <Login>
+                <button className="px-4 py-2 text-blue-600 font-medium border border-blue-600 rounded-lg hover:bg-blue-50 transition">Login</button>
+              </Login>
+              <Register>
+                <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">Register</button>
+              </Register>
+            </div>
+          }
         </div>
 
         {/* mobile menu button */}
@@ -53,20 +65,24 @@ function Navbar() {
       </div>
 
       {/* mobile panel */}
-      {open && (
-        <div className="md:hidden border-t bg-white/90">
-          <div className="px-6 py-4 flex flex-col gap-3">
-            <Link href="#features" onClick={() => setOpen(false)} className="text-gray-700">Features</Link>
-            <Link href="#how" onClick={() => setOpen(false)} className="text-gray-700">How it works</Link>
-            <Link href="/dashboard" onClick={() => setOpen(false)} className="text-gray-700">Dashboard</Link>
-            <div className="flex gap-3 mt-2">
-              <Link href="/login" className="flex-1 text-center px-3 py-2 border border-blue-600 rounded-md text-blue-600">Login</Link>
-              <Link href="/register" className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md">Register</Link>
+      {
+        open && (
+          <div className="md:hidden border-t bg-white/90">
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <Link href="#features" onClick={() => setOpen(false)} className="text-gray-700">Features</Link>
+              <Link href="#how" onClick={() => setOpen(false)} className="text-gray-700">How it works</Link>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="text-gray-700">Dashboard</Link>
+
+              <div className="flex gap-3 mt-2">
+                <button className="flex-1 text-center px-3 py-2 border border-blue-600 rounded-md text-blue-600">Login</button>
+                <button href="/register" className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md">Register</button>
+              </div>
+
             </div>
           </div>
-        </div>
-      )}
-    </nav>
+        )
+      }
+    </nav >
   )
 }
 

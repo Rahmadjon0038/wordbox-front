@@ -245,7 +245,7 @@ export default function LessonPage() {
                         Start Practice
                     </Link>
                     <Link
-                        href={`/dashboard/lesson/${id}/practice/notlearned`}
+                        href={`/dashboard/lesson/${id}/notlearned`}
                         className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                     >
                         Practice Not Learned

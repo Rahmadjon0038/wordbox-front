@@ -1,13 +1,17 @@
 'use client'
 import React, { useState } from 'react'
 import Link from 'next/link'
+import CreateLessonModal from '@/components/ui/modals/CreateLessonModals'
+import Login from '@/components/ui/modals/login'
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation'
+import { useAddLesson, usegetAllLessons } from '@/hooks/lessons'
 
 export default function Dashboard() {
-  const [lessons, setLessons] = useState([
-    { id: 1, title: 'Animals — Basic', words: 15, learned: 7 },
-    { id: 2, title: 'Fruits & Vegetables', words: 20, learned: 10 },
-    { id: 3, title: 'Travel & Transport', words: 12, learned: 3 },
-  ])
+  const { data, isLoading, error } = usegetAllLessons();
+  const lessons = data?.lessons
+  const lessonMutation = useAddLesson();
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -19,30 +23,38 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <StatCard label="Total Lessons" value={lessons.length} />
-          <StatCard label="Total Words" value={lessons.reduce((sum, l) => sum + l.words, 0)} />
-          <StatCard label="Learned Words" value={lessons.reduce((sum, l) => sum + l.learned, 0)} />
+          <StatCard label="Total Lessons" value={lessons?.length} />
+          <StatCard label="Total Words" value={lessons?.reduce((sum, l) => sum + l.words, 0)} />
+          <StatCard label="Learned Words" value={lessons?.reduce((sum, l) => sum + l.learned, 0)} />
         </div>
 
         {/* Lessons */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">My Lessons</h2>
-          <Link href="/dashboard/new-lesson" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            + New Lesson
-          </Link>
+          <CreateLessonModal >
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              + New Lesson
+            </button>
+          </CreateLessonModal>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lessons.map((lesson) => (
+          {lessons?.map((lesson) => (
             <LessonCard key={lesson.id} lesson={lesson} />
           ))}
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }
 
 function Navbar() {
+  const router = useRouter();
+
+  const logout = () => {
+    Cookies.remove('role')
+    router.push('/')
+  }
   return (
     <nav className="w-full bg-white shadow-sm sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-4 flex items-center justify-between">
@@ -52,9 +64,12 @@ function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
+          {/* <Login>
+            <button className="text-gray-600 hover:text-gray-900">Login</button>
+          </Login> */}
           <Link href="/profile" className="text-gray-600 hover:text-gray-900">Profile</Link>
-          <Link href="/logout" className="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-600">Logout</Link>
+
+          <button onClick={logout} className="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-600">Logout</button>
         </div>
       </div>
     </nav>
@@ -76,6 +91,7 @@ function LessonCard({ lesson }) {
   return (
     <div className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition flex flex-col justify-between">
       <div>
+        <p>{lesson?.id}</p>
         <h3 className="text-lg font-semibold mb-2">{lesson.title}</h3>
         <p className="text-sm text-gray-500 mb-4">{lesson.words} words • {lesson.learned} learned</p>
 
