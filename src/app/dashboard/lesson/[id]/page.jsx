@@ -2,66 +2,24 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useaddWords, usegetWords } from '@/hooks/words'
+import Loader from '@/components/ui/loaders/Loader'
 
 export default function LessonPage() {
-    const [words, setWords] = useState([
-        // Erkak va Ayollar uchun
-        { id: 1, english: 'man', uzbek: 'erkak', example: 'The man is tall.', exampleUz: 'Erkak bo‘ychan.', learned: false },
-        { id: 2, english: 'woman', uzbek: 'ayol', example: 'That woman is a nurse.', exampleUz: 'O‘sha ayol hamshira.', learned: false },
-        { id: 3, english: 'boy', uzbek: 'o‘g‘il bola', example: 'The boy is playing football.', exampleUz: 'O‘g‘il bola futbol o‘ynamoqda.', learned: false },
-        { id: 4, english: 'girl', uzbek: 'qiz bola', example: 'The girl is reading a book.', exampleUz: 'Qiz bola kitob o‘qimoqda.', learned: false },
-        { id: 5, english: 'father', uzbek: 'ota', example: 'My father is a teacher.', exampleUz: 'Mening otam o‘qituvchi.', learned: false },
-        { id: 6, english: 'mother', uzbek: 'ona', example: 'Her mother is kind.', exampleUz: 'Onasi mehribon.', learned: false },
-        { id: 7, english: 'son', uzbek: 'o‘g‘il', example: 'They have one son.', exampleUz: 'Ularning bitta o‘g‘li bor.', learned: false },
-        { id: 8, english: 'daughter', uzbek: 'qiz', example: 'His daughter is 5 years old.', exampleUz: 'Qizi 5 yoshda.', learned: false },
-        { id: 9, english: 'brother', uzbek: 'aka / uka', example: 'My brother is older than me.', exampleUz: 'Akam mendan katta.', learned: false },
-        { id: 10, english: 'sister', uzbek: 'opa / singil', example: 'Her sister is very smart.', exampleUz: 'Opasi juda aqlli.', learned: false },
-        { id: 11, english: 'husband', uzbek: 'er', example: 'She loves her husband.', exampleUz: 'U eri bilan baxtli.', learned: false },
-        { id: 12, english: 'wife', uzbek: 'xotin / turmush o‘rtog‘i', example: 'His wife is a doctor.', exampleUz: 'Xotini shifokor.', learned: false },
-        { id: 13, english: 'uncle', uzbek: 'amaki / tog‘a', example: 'My uncle lives in Tashkent.', exampleUz: 'Amakim Toshkentda yashaydi.', learned: false },
-        { id: 14, english: 'aunt', uzbek: 'amma / xola', example: 'Her aunt is very kind.', exampleUz: 'Xolasi juda mehribon.', learned: false },
-        { id: 15, english: 'nephew', uzbek: 'jiyan (o‘g‘il)', example: 'My nephew is 10 years old.', exampleUz: 'Jiyaning 10 yoshda.', learned: false },
-        { id: 16, english: 'niece', uzbek: 'jiyan (qiz)', example: 'Her niece is playing.', exampleUz: 'Jiyani o‘ynamoqda.', learned: false },
-        { id: 17, english: 'grandfather', uzbek: 'bobo', example: 'My grandfather is strong.', exampleUz: 'Bobom kuchli.', learned: false },
-        { id: 18, english: 'grandmother', uzbek: 'buvi', example: 'Her grandmother is kind.', exampleUz: 'Buvisi mehribon.', learned: false },
-        { id: 19, english: 'grandson', uzbek: 'nabira (o‘g‘il)', example: 'He has a grandson.', exampleUz: 'Uning nabirasi bor.', learned: false },
-        { id: 20, english: 'granddaughter', uzbek: 'nabira (qiz)', example: 'She has a granddaughter.', exampleUz: 'Uning nabirasi bor.', learned: false },
+    const { id } = useParams()
 
-        // Podshohlar va boshqalar
-        { id: 21, english: 'king', uzbek: 'podsho', example: 'The king is powerful.', exampleUz: 'Podsho qudratli.', learned: false },
-        { id: 22, english: 'queen', uzbek: 'qirolicha / malika', example: 'The queen is kind.', exampleUz: 'Qirolicha mehribon.', learned: false },
-        { id: 23, english: 'prince', uzbek: 'shahzoda', example: 'The prince is young.', exampleUz: 'Shahzoda yosh.', learned: false },
-        { id: 24, english: 'princess', uzbek: 'malikaxon', example: 'The princess is beautiful.', exampleUz: 'Malika chiroyli.', learned: false },
+    const addWordsMutation = useaddWords(); //pai words post
+    const { data, isLoading, error, refetch } = usegetWords(id); // api words get
 
-        // Kasblar
-        { id: 25, english: 'actor', uzbek: 'aktyor', example: 'The actor is famous.', exampleUz: 'Aktyor mashhur.', learned: false },
-        { id: 26, english: 'actress', uzbek: 'aktrisa', example: 'The actress is talented.', exampleUz: 'Aktrisa iste’dodli.', learned: false },
-        { id: 27, english: 'waiter', uzbek: 'ofitsiant (erkak)', example: 'The waiter brought food.', exampleUz: 'Ofitsiant ovqat keltirdi.', learned: false },
-        { id: 28, english: 'waitress', uzbek: 'ofitsiantka (ayol)', example: 'The waitress is smiling.', exampleUz: 'Ofitsiantka jilmaymoqda.', learned: false },
-        { id: 29, english: 'policeman', uzbek: 'militsioner (erkak)', example: 'The policeman is strict.', exampleUz: 'Militsioner qattiq.', learned: false },
-        { id: 30, english: 'policewoman', uzbek: 'militsioner (ayol)', example: 'The policewoman is brave.', exampleUz: 'Ayol militsioner jasur.', learned: false },
+    const words = data?.words
+    console.log(words)
 
-        // Qolganlari (general words)
-        { id: 31, english: 'great', uzbek: 'zo‘r / ajoyib', example: 'This is a great idea.', exampleUz: 'Bu ajoyib g‘oya.', learned: false },
-        { id: 32, english: 'bad', uzbek: 'yomon', example: 'The weather is bad today.', exampleUz: 'Bugun ob-havo yomon.', learned: false },
-        { id: 33, english: 'sad', uzbek: 'xafa / g‘amgin', example: 'She is sad today.', exampleUz: 'U bugun xafa.', learned: false },
-        { id: 34, english: 'hobby', uzbek: 'qiziqish / hobi', example: 'Reading is my hobby.', exampleUz: 'O‘qish mening hobim.', learned: false },
-        { id: 35, english: 'favorite', uzbek: 'sevimli', example: 'Blue is my favorite color.', exampleUz: 'Ko‘k mening sevimli rangim.', learned: false },
-        { id: 36, english: 'study', uzbek: 'o‘qish / o‘rganish', example: 'I study English.', exampleUz: 'Men ingliz tilini o‘rganaman.', learned: false },
-        { id: 37, english: 'what', uzbek: 'nima', example: 'What is your name?', exampleUz: 'Isming nima?', learned: false },
-        { id: 38, english: 'which', uzbek: 'qaysi', example: 'Which book do you like?', exampleUz: 'Qaysi kitobni yoqtirasan?', learned: false },
-        { id: 39, english: 'why', uzbek: 'nega', example: 'Why are you late?', exampleUz: 'Nega kechikding?', learned: false },
-        { id: 40, english: 'low', uzbek: 'past', example: 'The wall is low.', exampleUz: 'Devor past.', learned: false },
-        { id: 41, english: 'well', uzbek: 'yaxshi', example: 'I am well, thank you.', exampleUz: 'Men yaxshiman, rahmat.', learned: false },
-        { id: 42, english: 'make sure', uzbek: 'ishonch hosil qilmoq', example: 'Make sure you close the door.', exampleUz: 'Eshikni yopganingga ishonch hosil qil.', learned: false },
-        { id: 43, english: 'general', uzbek: 'umumiy', example: 'This is a general rule.', exampleUz: 'Bu umumiy qoida.', learned: false },
-        { id: 44, english: 'live', uzbek: 'yashamoq / jonli', example: 'I live in Samarkand.', exampleUz: 'Men Samarqandda yashayman.', learned: false }
-    ])
-
+    // const words = [
+    //     // Erkak va Ayollar uchun
+    //     { id: 1, english: 'man', uzbek: 'erkak', example: 'The man is tall.', exampleUz: 'Erkak bo‘ychan.', learned: false },
 
 
     const [filter, setFilter] = useState('all')
-    const { id } = useParams()
 
     // Inputlar uchun state
     const [newWord, setNewWord] = useState({
@@ -79,31 +37,38 @@ export default function LessonPage() {
     }
 
     // Statistikalar
-    const total = words.length
-    const learnedCount = words.filter(w => w.learned).length
+    const total = words?.length || 0
+    const learnedCount = words?.filter?.(w => w.learned)?.length || 0
     const notLearnedCount = total - learnedCount
 
     // Filtrlash
-    const filteredWords = words.filter((w) => {
+    const filteredWords = words?.filter?.((w) => {
         if (filter === 'learned') return w.learned
         if (filter === 'notLearned') return !w.learned
         return true
-    })
+    }) || []
 
     // Yangi so‘z qo‘shish
     const addWord = (e) => {
         e.preventDefault()
         if (!newWord.english || !newWord.uzbek) return
 
-        const newEntry = {
-            id: words.length + 1,
-            ...newWord,
-            learned: false
-        }
-        setWords([...words, newEntry])
+       const newEntry = {
+        ...newWord,
+        learned: false
+    }
 
-        // Inputlarni tozalash
+        addWordsMutation.mutate({ id, newEntry })
         setNewWord({ english: '', uzbek: '', example: '', exampleUz: '' })
+    }
+
+
+    if (isLoading || !words) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <span className="text-lg text-gray-500"><Loader/></span>
+            </div>
+        )
     }
 
     return (
@@ -200,17 +165,19 @@ export default function LessonPage() {
                 {/* Words list */}
                 <div className="p-6 bg-white rounded-xl shadow-sm">
                     <h2 className="text-xl font-semibold mb-4">Words in this Lesson</h2>
-                    {filteredWords.length === 0 ? (
+                    {filteredWords?.length === 0 ? (
                         <p className="text-gray-500">No words found.</p>
                     ) : (
                         <ul className="divide-y divide-gray-200">
-                            {filteredWords.map((w) => (
+                            {filteredWords?.map?.((w) => (
                                 <li key={w.id} className="py-4">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="font-medium text-lg">
+                                                <p>{w.id}</p>
                                                 {w.english} → {w.uzbek}
-                                                {w.learned && <span className="ml-2 text-green-600 text-sm">(Learned)</span>}
+                                                {w.learned === 1 && <span className="ml-2 text-green-600 text-sm">(Learned)</span>}
+
                                             </div>
                                             <div className="text-sm text-gray-600">{w.example}</div>
                                             <div className="text-sm text-gray-500 italic">({w.exampleUz})</div>

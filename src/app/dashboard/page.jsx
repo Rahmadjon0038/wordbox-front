@@ -5,7 +5,9 @@ import CreateLessonModal from '@/components/ui/modals/CreateLessonModals'
 import Login from '@/components/ui/modals/login'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation'
-import { useAddLesson, usegetAllLessons } from '@/hooks/lessons'
+import { useAddLesson, useDeleteLesson, usegetAllLessons } from '@/hooks/lessons'
+import Loader from '@/components/ui/loaders/Loader'
+import NotifiModal from '@/components/ui/modals/NotifiModal'
 
 export default function Dashboard() {
   const { data, isLoading, error } = usegetAllLessons();
@@ -38,11 +40,23 @@ export default function Dashboard() {
           </CreateLessonModal>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lessons?.map((lesson) => (
-            <LessonCard key={lesson.id} lesson={lesson} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center p-24 mt-12 bg-white rounded-xl shadow text-center w-full">
+            <span className="text-lg text-gray-500"><Loader /></span>
+          </div>
+        ) : lessons && lessons.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {lessons.map((lesson) => (
+              <LessonCard key={lesson.id} lesson={lesson} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center">
+            <div className="p-24 mt-12 bg-white rounded-xl shadow text-center w-full">
+              <span className="text-lg text-gray-400">Not found</span>
+            </div>
+          </div>
+        )}
       </main >
     </div >
   )
@@ -79,7 +93,7 @@ function Navbar() {
 function StatCard({ label, value }) {
   return (
     <div className="p-6 bg-white rounded-xl shadow-sm">
-      <div className="text-sm text-gray-500">{label}</div>
+      <div className="text-sm text-gray-500 min-h-4">{label}</div>
       <div className="text-2xl font-bold mt-2">{value}</div>
     </div>
   )
@@ -87,11 +101,12 @@ function StatCard({ label, value }) {
 
 function LessonCard({ lesson }) {
   const progress = Math.round((lesson.learned / lesson.words) * 100)
+  
 
   return (
     <div className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition flex flex-col justify-between">
       <div>
-        <p>{lesson?.id}</p>
+        {/* <p>{lesson?.id}</p> */}
         <h3 className="text-lg font-semibold mb-2">{lesson.title}</h3>
         <p className="text-sm text-gray-500 mb-4">{lesson.words} words • {lesson.learned} learned</p>
 
@@ -103,6 +118,14 @@ function LessonCard({ lesson }) {
       <div className="flex gap-3">
         <Link href={`/dashboard/lesson/${lesson.id}`} className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Open</Link>
         <Link href={`/dashboard/lesson/${lesson.id}/practice`} className="flex-1 text-center px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Practice</Link>
+
+        <NotifiModal lessonid={lesson.id} text='Siz ushbu amalni bajarishga rozimisiz?
+            Bu amalni tasdiqlaganingizdan so‘ng ortga qaytarib bo‘lmaydi.'>
+          <button
+            className="flex-1 text-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+            Delete
+          </button>
+        </NotifiModal>
       </div>
     </div>
   )

@@ -46,3 +46,31 @@ export const usegetAllLessons = () => {
 }
 
 
+// ----------------- DELETE LESSON ------------------
+
+const deleteLesson = async ({ id }) => {
+    const response = await instance.delete(`/api/lessons/${id}`);
+    return response.data
+}
+
+export const useDeleteLesson = () => {
+    const queryClient = useQueryClient();
+
+    const deleteLessonMutation = useMutation({
+        mutationFn: deleteLesson,
+        mutationKey: ['lessons'],
+        onSuccess: (data, vars) => {
+            notify('ok', data?.message)
+            queryClient.invalidateQueries(['lessons']);
+            if (vars.onSuccess) {
+                vars.onSuccess(data)
+            }
+        },
+        onError: (err) => {
+            notify('err', err?.response?.data?.error)
+        }
+    })
+    return deleteLessonMutation
+}
+
+
