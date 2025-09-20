@@ -174,7 +174,6 @@ export default function LessonPage() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="font-medium text-lg">
-                                                <p>{w.id}</p>
                                                 {w.english} → {w.uzbek}
                                                 {w.learned === 1 && <span className="ml-2 text-green-600 text-sm">(Learned)</span>}
 

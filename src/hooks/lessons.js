@@ -12,7 +12,6 @@ const register = async ({ lessondata }) => {
 
 export const useAddLesson = () => {
     const queryClient = useQueryClient();
-
     const lessonMutation = useMutation({
         mutationFn: register,
         mutationKey: ['lessons'],
@@ -71,6 +70,52 @@ export const useDeleteLesson = () => {
         }
     })
     return deleteLessonMutation
+}
+
+
+
+// ---------------- GET LESSONS ALL----------------------
+const getLessonPractice = async ({ queryKey }) => {
+    const id = queryKey[1]
+
+    const response = await instance.get(`/api/words/lesson/${id}`);
+    return response.data
+}
+
+export const usegetLessonPractice = (id) => {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['lessons', id],
+        queryFn: getLessonPractice,
+    })
+    return { data, isLoading, error, refetch }
+}
+
+
+
+
+// ----------------- DELETE LESSON ------------------
+
+const updateword = async ({ id, learned }) => {
+    console.log(id, learned, 'salom')
+    const response = await instance.patch(`/api/words/${id}/learned`, { learned });
+    return response.data
+}
+
+export const useupdateword = () => {
+    const queryClient = useQueryClient();
+    const updatewordMutation = useMutation({
+        mutationFn: updateword,
+        mutationKey: ['lessons'],
+        onSuccess: (data, vars) => {
+            queryClient.invalidateQueries(['lessons']);
+            if (vars.onSuccess) {
+                vars.onSuccess(data)
+            }
+        },
+        onError: (err) => {
+        }
+    })
+    return updatewordMutation
 }
 
 
