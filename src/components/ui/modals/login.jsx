@@ -5,23 +5,40 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import { uselogin } from '@/hooks/auth';
 import { useRouter } from 'next/navigation';
 
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  borderRadius: "12px",
-  boxShadow: 24,
-  p: 4,
-};
+
+// style will be set dynamically based on screen size
 
 export default function Login({ children }) {
   const loginMutation = uselogin(); // api hoks login
+  const isMobile = useMediaQuery({ maxWidth: 600 });
+  const modalStyle = isMobile
+    ? {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: 400,
+        bgcolor: 'background.paper',
+        borderRadius: '12px',
+        boxShadow: 24,
+        p: 2,
+      }
+    : {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        borderRadius: '12px',
+        boxShadow: 24,
+        p: 4,
+      };
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,7 +74,7 @@ export default function Login({ children }) {
         aria-labelledby="login-modal-title"
         aria-describedby="login-modal-description"
       >
-        <Box sx={style}>
+  <Box sx={modalStyle}>
           <Typography id="login-modal-title" variant="h6" component="h2" gutterBottom>
             Tizimga kirish
           </Typography>

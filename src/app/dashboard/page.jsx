@@ -5,14 +5,17 @@ import CreateLessonModal from '@/components/ui/modals/CreateLessonModals'
 import Login from '@/components/ui/modals/login'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation'
-import { useAddLesson, useDeleteLesson, usegetAllLessons } from '@/hooks/lessons'
+import { useAddLesson, useAdminStats, useDeleteLesson, usegetAllLessons } from '@/hooks/lessons'
 import Loader from '@/components/ui/loaders/Loader'
 import NotifiModal from '@/components/ui/modals/NotifiModal'
-
+import { usegetStats } from '@/hooks/words'
 export default function Dashboard() {
+
   const { data, isLoading, error } = usegetAllLessons();
   const lessons = data?.lessons
   const lessonMutation = useAddLesson();
+
+  const { data: stats, isLoading: stastloading, error: stasterr, refetch } = useAdminStats();
 
 
   return (
@@ -25,9 +28,9 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <StatCard label="Total Lessons" value={lessons?.length} />
-          <StatCard label="Total Words" value={lessons?.reduce((sum, l) => sum + l.words, 0)} />
-          <StatCard label="Learned Words" value={lessons?.reduce((sum, l) => sum + l.learned, 0)} />
+          <StatCard label="Total Lessons" value={stats?.stats?.totalLessons} />
+          <StatCard label="Total Words" value={stats?.stats?.totalWords} />
+          <StatCard label="Learned Words" value={stats?.stats?.learnedWords} />
         </div>
 
         {/* Lessons */}
@@ -101,14 +104,14 @@ function StatCard({ label, value }) {
 
 function LessonCard({ lesson }) {
   const progress = Math.round((lesson.learned / lesson.words) * 100)
-  
+
 
   return (
     <div className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition flex flex-col justify-between">
       <div>
         {/* <p>{lesson?.id}</p> */}
         <h3 className="text-lg font-semibold mb-2">{lesson.title}</h3>
-        <p className="text-sm text-gray-500 mb-4">{lesson.words} words • {lesson.learned} learned</p>
+        <p className="text-sm text-gray-500 mb-4">{lesson.totalWords} words • {lesson.learnedWords} learned</p>
 
         <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mb-4">
           <div className="h-full bg-blue-600" style={{ width: `${progress}%` }}></div>

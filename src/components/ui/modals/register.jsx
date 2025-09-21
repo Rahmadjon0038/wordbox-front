@@ -6,20 +6,34 @@ import Modal from '@mui/material/Modal';
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
 import { useRegister } from '@/hooks/auth';
-
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  borderRadius: "12px",
-  boxShadow: 24,
-  p: 4,
-};
+import { useMediaQuery } from 'react-responsive';
 
 export default function Register({ children }) {
+  const isMobile = useMediaQuery({ maxWidth: 600 });
+   const style = isMobile
+     ? {
+         position: 'absolute',
+         top: '50%',
+         left: '50%',
+         transform: 'translate(-50%, -50%)',
+         width: '95vw',
+         maxWidth: 400,
+         bgcolor: 'background.paper',
+         borderRadius: '12px',
+         boxShadow: 24,
+         p: 2,
+       }
+     : {
+         position: 'absolute',
+         top: '50%',
+         left: '50%',
+         transform: 'translate(-50%, -50%)',
+         width: 400,
+         bgcolor: 'background.paper',
+         borderRadius: '12px',
+         boxShadow: 24,
+         p: 4,
+       };
   const registerMutation = useRegister();  // api hoks
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');

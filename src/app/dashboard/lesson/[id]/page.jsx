@@ -4,57 +4,55 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useaddWords, usedeleteWord, usegetWords } from '@/hooks/words'
 import Loader from '@/components/ui/loaders/Loader'
-import { Pencil, Trash2, Volume2, SpellCheck } from "lucide-react";
+import { Pencil, Trash2, Volume2, SpellCheck, Menu } from "lucide-react";
 import EditWord from '@/components/ui/modals/EditWord'
+import { usegetLessonId } from '@/hooks/lessons'
 
 export default function LessonPage() {
     const { id } = useParams()
+    const addWordsMutation = useaddWords()
+    const { data, isLoading } = usegetWords(id)
+    const deleteWordMutation = usedeleteWord()
 
-    const addWordsMutation = useaddWords(); //pai words post
-    const { data, isLoading, error, refetch } = usegetWords(id); // api words get
-    const deleteWordMutation = usedeleteWord() // delete word api
+    const { data: lessonName, isLoading: lessonNameLoading, error, refetch } = usegetLessonId(id)
 
     const words = data?.words
-
-    const handleDelete = (id) => {
-        deleteWordMutation.mutate(id)
-    }
-
-
     const [filter, setFilter] = useState('all')
+    const [newWord, setNewWord] = useState({ english: '', uzbek: '', example: '', exampleUz: '' })
 
-    // Inputlar uchun state
-    const [newWord, setNewWord] = useState({
-        english: '',
-        uzbek: '',
-        example: '',
-        exampleUz: ''
-    })
+    const handleDelete = (id) => deleteWordMutation.mutate(id)
 
     const speak = (text) => {
         if (!text) return;
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking) window.speechSynthesis.cancel()
+        const utter = new window.SpeechSynthesisUtterance(text)
+        utter.lang = 'en-US'
+        if (typeof text === 'string' && text.trim().includes(' ')) utter.rate = 0.8
+        const setVoiceAndSpeak = () => {
+            const voices = window.speechSynthesis.getVoices()
+            utter.voice = voices.find(v => v.lang === 'en-US') || voices[0]
+            window.speechSynthesis.speak(utter)
         }
-        const utterance = new window.SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        // Agar gap bo'lsa (probel bor), sekinroq o'qisin
-        if (typeof text === 'string' && text.trim().includes(' ')) {
-            utterance.rate = 0.8; // gap uchun sekinroq
-        }
-        function setVoiceAndSpeak() {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices && voices.length > 0) {
-                utterance.voice = voices.find(v => v.lang === 'en-US') || voices[0];
-                window.speechSynthesis.speak(utterance);
-            } else {
-                setTimeout(setVoiceAndSpeak, 100);
+        setVoiceAndSpeak()
+    }
+
+    const spellWord = (text) => {
+        if (!text) return;
+        if (window.speechSynthesis.speaking) window.speechSynthesis.cancel()
+        const letters = text.split('')
+        let idx = 0
+        const speakNext = () => {
+            if (idx >= letters.length) return
+            const utter = new window.SpeechSynthesisUtterance(letters[idx])
+            utter.lang = 'en-US'
+            utter.rate = 0.6
+            utter.onend = () => {
+                idx++
+                setTimeout(speakNext, 350)
             }
+            window.speechSynthesis.speak(utter)
         }
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
-        }
-        setVoiceAndSpeak();
+        speakNext()
     }
 
     // Statistikalar
@@ -62,56 +60,24 @@ export default function LessonPage() {
     const learnedCount = words?.filter?.(w => w.learned)?.length || 0
     const notLearnedCount = total - learnedCount
 
-    // Filtrlash
     const filteredWords = words?.filter?.((w) => {
         if (filter === 'learned') return w.learned
         if (filter === 'notLearned') return !w.learned
         return true
     }) || []
 
-    // Yangi so‘z qo‘shish
     const addWord = (e) => {
         e.preventDefault()
         if (!newWord.english || !newWord.uzbek) return
-
-        const newEntry = {
-            ...newWord,
-            learned: false
-        }
-
+        const newEntry = { ...newWord, learned: false }
         addWordsMutation.mutate({ id, newEntry })
         setNewWord({ english: '', uzbek: '', example: '', exampleUz: '' })
-    }
-
-    const spellWord = (text) => {
-        if (!text) return;
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-        }
-        const letters = text.split('');
-        let idx = 0;
-        function speakNextLetter() {
-            if (idx >= letters.length) return;
-            const utter = new window.SpeechSynthesisUtterance(letters[idx]);
-            utter.lang = 'en-US';
-            const voices = window.speechSynthesis.getVoices();
-            if (voices && voices.length > 0) {
-                utter.voice = voices.find(v => v.lang === 'en-US') || voices[0];
-            }
-            utter.rate = 0.6; // sekinroq o'qish
-            utter.onend = function () {
-                idx++;
-                setTimeout(speakNextLetter, 350); // harf orasida pauza
-            };
-            window.speechSynthesis.speak(utter);
-        }
-        speakNextLetter();
     }
 
     if (isLoading || !words) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <span className="text-lg text-gray-500"><Loader /></span>
+                <Loader />
             </div>
         )
     }
@@ -119,15 +85,14 @@ export default function LessonPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
-
-            <main className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-10">
-                <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold">Lesson: Animals — Basic</h1>
-                    <Link href="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</Link>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                    <h1 className="text-2xl sm:text-3xl font-bold">{lessonName?.title}</h1>
+                    <Link href="/dashboard" className="text-blue-600 hover:underline">Back to Dashboard</Link>
                 </div>
 
                 {/* Statistikalar */}
-                <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-white shadow rounded-lg">
                         <p className="text-gray-500">Total Words</p>
                         <p className="text-2xl font-bold">{total}</p>
@@ -138,37 +103,33 @@ export default function LessonPage() {
                     </div>
                     <div className="p-4 bg-red-50 shadow rounded-lg">
                         <p className="text-gray-500">Not Learned</p>
-                        <p className="text-2xl font-bold text-red-600">
-                            {notLearnedCount}
-                        </p>
+                        <p className="text-2xl font-bold text-red-600">{notLearnedCount}</p>
                     </div>
                 </div>
 
                 {/* Filter buttons */}
-                <div className="flex gap-3 mb-8">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                        All Words
-                    </button>
-                    <button
-                        onClick={() => setFilter('learned')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'learned' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                        Learned
-                    </button>
-                    <button
-                        onClick={() => setFilter('notLearned')}
-                        className={`px-4 py-2 rounded-lg ${filter === 'notLearned' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                        Not Learned
-                    </button>
+                <div className="flex flex-wrap gap-3 mb-8">
+                    {['all', 'learned', 'notLearned'].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-4 py-2 rounded-lg text-sm sm:text-base transition ${filter === f
+                                ? f === 'all'
+                                    ? 'bg-blue-600 text-white'
+                                    : f === 'learned'
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-red-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                        >
+                            {f === 'all' ? 'All Words' : f === 'learned' ? 'Learned' : 'Not Learned'}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Word qo‘shish formasi */}
                 <div className="mb-8 p-6 bg-white rounded-xl shadow">
-                    <h2 className="text-xl font-semibold mb-4">➕ Add New Word</h2>
+                    <h2 className="text-lg sm:text-xl font-semibold mb-4">➕ Add New Word</h2>
                     <form onSubmit={addWord} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input
                             type="text"
@@ -189,18 +150,18 @@ export default function LessonPage() {
                             placeholder="Example sentence (EN)"
                             value={newWord.example}
                             onChange={(e) => setNewWord({ ...newWord, example: e.target.value })}
-                            className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 col-span-2"
+                            className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 sm:col-span-2"
                         />
                         <input
                             type="text"
                             placeholder="Example translation (UZ)"
                             value={newWord.exampleUz}
                             onChange={(e) => setNewWord({ ...newWord, exampleUz: e.target.value })}
-                            className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 col-span-2"
+                            className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 sm:col-span-2"
                         />
                         <button
                             type="submit"
-                            className="col-span-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                            className="sm:col-span-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
                         >
                             Add Word
                         </button>
@@ -209,16 +170,16 @@ export default function LessonPage() {
 
                 {/* Words list */}
                 <div className="p-6 bg-white rounded-xl shadow-sm">
-                    <h2 className="text-xl font-semibold mb-4">Words in this Lesson</h2>
+                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Words in this Lesson</h2>
                     {filteredWords?.length === 0 ? (
                         <p className="text-gray-500">No words found.</p>
                     ) : (
                         <ul className="divide-y divide-gray-200">
                             {filteredWords?.map?.((w) => (
                                 <li key={w.id} className="py-4">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                         <div>
-                                            <div className="font-medium text-lg">
+                                            <div className="font-medium text-base sm:text-lg">
                                                 {w.english} → {w.uzbek}
                                                 {w.learned === 1 && (
                                                     <span className="ml-2 text-green-600 text-sm">(Learned)</span>
@@ -228,54 +189,49 @@ export default function LessonPage() {
                                             <div className="text-sm text-gray-500 italic">({w.exampleUz})</div>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2 items-center">
-                                            {/* Speak word */}
+                                        <div className="flex flex-wrap gap-2">
                                             <button
                                                 onClick={() => speak(w.english)}
-                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
+                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 text-sm"
                                             >
-                                                <Volume2 className="w-5 h-5" />
-                                                <span>Word</span>
+                                                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                Word
                                             </button>
 
-                                            {/* Speak sentence */}
                                             <button
                                                 onClick={() => speak(w.example)}
-                                                className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-md hover:bg-green-100"
+                                                className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-md hover:bg-green-100 text-sm"
                                             >
-                                                <Volume2 className="w-5 h-5" />
-                                                <span>Sentence</span>
+                                                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                Sentence
                                             </button>
 
-                                            {/* Spell word (letter by letter) */}
                                             <button
                                                 onClick={() => spellWord(w.english)}
-                                                className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-md hover:bg-purple-100 transition"
+                                                className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-md hover:bg-purple-100 text-sm"
                                             >
-                                                <SpellCheck className="w-5 h-5" />
-                                                <span>Spelling</span>
+                                                <SpellCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                Spelling
                                             </button>
 
-                                            {/* Edit */}
-                                            <EditWord  word={w}>
+                                            <EditWord word={w}>
                                                 <button
-                                                    className="flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-600 rounded-md hover:bg-yellow-100">
-                                                    <Pencil className="w-5 h-5" />
-                                                    <span>Edit</span>
+                                                    className="flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-600 rounded-md hover:bg-yellow-100 text-sm"
+                                                >
+                                                    <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                    Edit
                                                 </button>
                                             </EditWord>
 
-                                            {/* Delete */}
                                             <button
                                                 onClick={() => handleDelete(w.id)}
-                                                className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100"
+                                                className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 text-sm"
                                             >
-                                                <Trash2 className="w-5 h-5" />
-                                                <span>Delete</span>
+                                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
-
                                 </li>
                             ))}
                         </ul>
@@ -283,16 +239,16 @@ export default function LessonPage() {
                 </div>
 
                 {/* Practice buttons */}
-                <div className="mt-8 text-center flex gap-4 justify-center">
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                     <Link
                         href={`/dashboard/lesson/${id}/practice`}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center"
                     >
                         Start Practice
                     </Link>
                     <Link
                         href={`/dashboard/lesson/${id}/notlearned`}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center"
                     >
                         Practice Not Learned
                     </Link>
@@ -303,18 +259,38 @@ export default function LessonPage() {
 }
 
 function Navbar() {
+    const [open, setOpen] = useState(false)
+
     return (
         <nav className="w-full bg-white shadow-sm sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-4 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-4 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">WM</div>
-                    <span className="font-bold text-gray-800">WordMaster</span>
+                    <span className="font-bold text-gray-800 hidden sm:inline">WordMaster</span>
                 </Link>
-                <div className="flex items-center gap-4">
+
+                {/* Desktop menu */}
+                <div className="hidden sm:flex items-center gap-4">
                     <Link href="/profile" className="text-gray-600 hover:text-gray-900">Profile</Link>
                     <Link href="/logout" className="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-600">Logout</Link>
                 </div>
+
+                {/* Mobile menu button */}
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="sm:hidden p-2 rounded-md bg-gray-100 hover:bg-gray-200"
+                >
+                    <Menu className="w-5 h-5" />
+                </button>
             </div>
+
+            {/* Mobile dropdown */}
+            {open && (
+                <div className="sm:hidden bg-white shadow-md px-4 py-3 flex flex-col gap-2">
+                    <Link href="/profile" className="text-gray-600 hover:text-gray-900">Profile</Link>
+                    <Link href="/logout" className="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-600">Logout</Link>
+                </div>
+            )}
         </nav>
     )
 }

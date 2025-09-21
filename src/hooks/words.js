@@ -33,7 +33,6 @@ export const useaddWords = () => {
 // ---------------- GET WORDS ALL----------------------
 const getWords = async ({ queryKey }) => {
     const id = queryKey[1]
-    console.log(queryKey, 's')
     const response = await instance.get(`/api/words/${id}`);
     return response.data
 }
@@ -78,9 +77,8 @@ export const usedeleteWord = () => {
 // ---------------- update words  ---------------------
 
 
-const editWord = async (word) => {
-    const { english, uzbek, example, exampleUz, learned } = word
-    const response = await instance.put(`/api/words/${id}`,);
+const editWord = async ({ id, newWord }) => {
+    const response = await instance.put(`/api/words/${id}`,newWord);
     return response.data
 }
 

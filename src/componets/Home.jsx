@@ -22,7 +22,8 @@ export default function WordMasterHome() {
 function Navbar() {
   const [open, setOpen] = useState(false)
 
-  const role = Cookies.get('role');
+  const token = Cookies.get('token');
+
 
   return (
     <nav className="w-full bg-white/60 backdrop-blur-md sticky top-0 z-40 shadow-sm">
@@ -40,10 +41,10 @@ function Navbar() {
           <Link href="#features" className="text-gray-600 hover:text-gray-900">Features</Link>
           <Link href="#how" className="text-gray-600 hover:text-gray-900">How it works</Link>
 
-
-
-          {role ? <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link> :
-            < div className="flex items-center gap-3">
+          {token ? (
+            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
+          ) : (
+            <div className="flex items-center gap-3">
               <Login>
                 <button className="px-4 py-2 text-blue-600 font-medium border border-blue-600 rounded-lg hover:bg-blue-50 transition">Login</button>
               </Login>
@@ -51,7 +52,7 @@ function Navbar() {
                 <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">Register</button>
               </Register>
             </div>
-          }
+          )}
         </div>
 
         {/* mobile menu button */}
@@ -71,13 +72,18 @@ function Navbar() {
             <div className="px-6 py-4 flex flex-col gap-3">
               <Link href="#features" onClick={() => setOpen(false)} className="text-gray-700">Features</Link>
               <Link href="#how" onClick={() => setOpen(false)} className="text-gray-700">How it works</Link>
-              <Link href="/dashboard" onClick={() => setOpen(false)} className="text-gray-700">Dashboard</Link>
-
-              <div className="flex gap-3 mt-2">
-                <button className="flex-1 text-center px-3 py-2 border border-blue-600 rounded-md text-blue-600">Login</button>
-                <button href="/register" className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md">Register</button>
-              </div>
-
+              {token ? (
+                <Link href="/dashboard" onClick={() => setOpen(false)} className="text-gray-700">Dashboard</Link>
+              ) : (
+                <div className="flex gap-3 mt-2">
+                  <Login>
+                    <button className="flex-1 text-center px-3 py-2 border border-blue-600 rounded-md text-blue-600">Login</button>
+                  </Login>
+                  <Register>
+                    <button className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md">Register</button>
+                  </Register>
+                </div>
+              )}
             </div>
           </div>
         )

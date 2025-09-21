@@ -30,6 +30,7 @@ export const useAddLesson = () => {
 }
 
 
+
 // ---------------- GET LESSONS ALL----------------------
 const getAllLessons = async () => {
     const response = await instance.get('/api/lessons');
@@ -40,6 +41,37 @@ export const usegetAllLessons = () => {
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['lessons'],
         queryFn: getAllLessons,
+    })
+    return { data, isLoading, error, refetch }
+}
+
+// ---------------- GET name id----------------------
+const getLessonId = async ({ queryKey }) => {
+    const id = queryKey[1]
+    const response = await instance.get(`/api/lessons/${id}`);
+    return response.data
+}
+
+export const usegetLessonId = (id) => {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['lessons-id',id],
+        queryFn: getLessonId,
+    })
+    return { data, isLoading, error, refetch }
+}
+
+
+// ---------------- admin LESSONS ALL----------------------
+
+const adminStats = async () => {
+    const response = await instance.get('/api/lessons/stats/overall');
+    return response.data
+}
+
+export const useAdminStats = () => {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['admin-stats'],
+        queryFn: adminStats,
     })
     return { data, isLoading, error, refetch }
 }
@@ -92,19 +124,19 @@ export const usegetLessonPractice = (id) => {
 
 // ---------------- Not practike words----------------------
 const notPractikeWords = async ({ queryKey }) => {
-  const [, id] = queryKey  // destrukturatsiya qilib olaylik
-  console.log(id)
-  const response = await instance.get(`api/words/${id}/unlearned`);
-  return response.data
+    const [, id] = queryKey  // destrukturatsiya qilib olaylik
+    console.log(id)
+    const response = await instance.get(`api/words/${id}/unlearned`);
+    return response.data
 }
 
 export const usenotPractikeWords = (id) => {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['lessons', id],
-    queryFn: notPractikeWords,
-    enabled: !!id, // faqat id bo‘lsa ishlaydi
-  })
-  return { data, isLoading, error, refetch }
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['lessons', id],
+        queryFn: notPractikeWords,
+        enabled: !!id, // faqat id bo‘lsa ishlaydi
+    })
+    return { data, isLoading, error, refetch }
 }
 
 
@@ -132,5 +164,7 @@ export const useupdateword = () => {
     })
     return updatewordMutation
 }
+
+
 
 
