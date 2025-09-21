@@ -2,18 +2,25 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useaddWords, usegetWords } from '@/hooks/words'
+import { useaddWords, usedeleteWord, usegetWords } from '@/hooks/words'
 import Loader from '@/components/ui/loaders/Loader'
+import { Pencil, Trash2, Volume2, SpellCheck } from "lucide-react";
+import EditWord from '@/components/ui/modals/EditWord'
 
 export default function LessonPage() {
     const { id } = useParams()
 
     const addWordsMutation = useaddWords(); //pai words post
     const { data, isLoading, error, refetch } = usegetWords(id); // api words get
+    const deleteWordMutation = usedeleteWord() // delete word api
 
     const words = data?.words
 
-  
+    const handleDelete = (id) => {
+        deleteWordMutation.mutate(id)
+    }
+
+
     const [filter, setFilter] = useState('all')
 
     // Inputlar uchun state
@@ -26,30 +33,28 @@ export default function LessonPage() {
 
     const speak = (text) => {
         if (!text) return;
-            // Ba'zan eski nutqni to'xtatish kerak
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        const utterance = new window.SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        // Agar gap bo'lsa (probel bor), sekinroq o'qisin
+        if (typeof text === 'string' && text.trim().includes(' ')) {
+            utterance.rate = 0.8; // gap uchun sekinroq
+        }
+        function setVoiceAndSpeak() {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+                utterance.voice = voices.find(v => v.lang === 'en-US') || voices[0];
+                window.speechSynthesis.speak(utterance);
+            } else {
+                setTimeout(setVoiceAndSpeak, 100);
             }
-            const utterance = new window.SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-
-            // Ovozlar yuklanishini kutish uchun promise
-            function setVoiceAndSpeak() {
-                const voices = window.speechSynthesis.getVoices();
-                if (voices && voices.length > 0) {
-                    utterance.voice = voices.find(v => v.lang === 'en-US') || voices[0];
-                    window.speechSynthesis.speak(utterance);
-                } else {
-                    // fallback: ovozlar hali yuklanmagan bo‘lsa, biroz kutib qayta urinadi
-                    setTimeout(setVoiceAndSpeak, 100);
-                }
-            }
-
-            // Ba'zi brauzerlarda ovozlar kechikib yuklanadi
-            if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
-            }
-            setVoiceAndSpeak();
+        }
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
+        }
+        setVoiceAndSpeak();
     }
 
     // Statistikalar
@@ -69,20 +74,44 @@ export default function LessonPage() {
         e.preventDefault()
         if (!newWord.english || !newWord.uzbek) return
 
-       const newEntry = {
-        ...newWord,
-        learned: false
-    }
+        const newEntry = {
+            ...newWord,
+            learned: false
+        }
 
         addWordsMutation.mutate({ id, newEntry })
         setNewWord({ english: '', uzbek: '', example: '', exampleUz: '' })
     }
 
+    const spellWord = (text) => {
+        if (!text) return;
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        const letters = text.split('');
+        let idx = 0;
+        function speakNextLetter() {
+            if (idx >= letters.length) return;
+            const utter = new window.SpeechSynthesisUtterance(letters[idx]);
+            utter.lang = 'en-US';
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+                utter.voice = voices.find(v => v.lang === 'en-US') || voices[0];
+            }
+            utter.rate = 0.6; // sekinroq o'qish
+            utter.onend = function () {
+                idx++;
+                setTimeout(speakNextLetter, 350); // harf orasida pauza
+            };
+            window.speechSynthesis.speak(utter);
+        }
+        speakNextLetter();
+    }
 
     if (isLoading || !words) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <span className="text-lg text-gray-500"><Loader/></span>
+                <span className="text-lg text-gray-500"><Loader /></span>
             </div>
         )
     }
@@ -191,27 +220,62 @@ export default function LessonPage() {
                                         <div>
                                             <div className="font-medium text-lg">
                                                 {w.english} → {w.uzbek}
-                                                {w.learned === 1 && <span className="ml-2 text-green-600 text-sm">(Learned)</span>}
-
+                                                {w.learned === 1 && (
+                                                    <span className="ml-2 text-green-600 text-sm">(Learned)</span>
+                                                )}
                                             </div>
                                             <div className="text-sm text-gray-600">{w.example}</div>
                                             <div className="text-sm text-gray-500 italic">({w.exampleUz})</div>
                                         </div>
-                                        <div className="flex gap-2">
+
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            {/* Speak word */}
                                             <button
                                                 onClick={() => speak(w.english)}
-                                                className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
+                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
                                             >
-                                                🔊 Word
+                                                <Volume2 className="w-5 h-5" />
+                                                <span>Word</span>
                                             </button>
+
+                                            {/* Speak sentence */}
                                             <button
                                                 onClick={() => speak(w.example)}
-                                                className="px-3 py-1 bg-green-50 text-green-600 rounded-md hover:bg-green-100"
+                                                className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-md hover:bg-green-100"
                                             >
-                                                🔊 Sentence
+                                                <Volume2 className="w-5 h-5" />
+                                                <span>Sentence</span>
+                                            </button>
+
+                                            {/* Spell word (letter by letter) */}
+                                            <button
+                                                onClick={() => spellWord(w.english)}
+                                                className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-md hover:bg-purple-100 transition"
+                                            >
+                                                <SpellCheck className="w-5 h-5" />
+                                                <span>Spelling</span>
+                                            </button>
+
+                                            {/* Edit */}
+                                            <EditWord  word={w}>
+                                                <button
+                                                    className="flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-600 rounded-md hover:bg-yellow-100">
+                                                    <Pencil className="w-5 h-5" />
+                                                    <span>Edit</span>
+                                                </button>
+                                            </EditWord>
+
+                                            {/* Delete */}
+                                            <button
+                                                onClick={() => handleDelete(w.id)}
+                                                className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                                <span>Delete</span>
                                             </button>
                                         </div>
                                     </div>
+
                                 </li>
                             ))}
                         </ul>

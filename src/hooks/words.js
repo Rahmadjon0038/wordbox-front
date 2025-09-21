@@ -46,3 +46,60 @@ export const usegetWords = (id) => {
     return { data, isLoading, error, refetch }
 }
 
+
+// ---------------- delete words  ---------------------
+
+
+const deleteWord = async (id) => {
+    const response = await instance.delete(`/api/words/${id}`,);
+    return response.data
+}
+
+export const usedeleteWord = () => {
+    const queryClient = useQueryClient();
+
+    const deleteWordMutation = useMutation({
+        mutationFn: deleteWord,
+        mutationKey: ['wodrs'],
+        onSuccess: (data, vars) => {
+            notify('ok', data?.message)
+            queryClient.invalidateQueries(['words']);
+            if (vars.onSuccess) {
+                vars.onSuccess(data)
+            }
+        },
+        onError: (err) => {
+            notify('err', err?.response?.data?.error)
+        }
+    })
+    return deleteWordMutation
+}
+
+// ---------------- update words  ---------------------
+
+
+const editWord = async (word) => {
+    const { english, uzbek, example, exampleUz, learned } = word
+    const response = await instance.put(`/api/words/${id}`,);
+    return response.data
+}
+
+export const useeditWord = () => {
+    const queryClient = useQueryClient();
+
+    const editWordMutation = useMutation({
+        mutationFn: editWord,
+        mutationKey: ['wodrs'],
+        onSuccess: (data, vars) => {
+            notify('ok', data?.message)
+            queryClient.invalidateQueries(['words']);
+            if (vars.onSuccess) {
+                vars.onSuccess(data)
+            }
+        },
+        onError: (err) => {
+            notify('err', err?.response?.data?.error)
+        }
+    })
+    return editWordMutation
+}
