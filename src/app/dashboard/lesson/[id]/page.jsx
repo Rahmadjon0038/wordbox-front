@@ -12,13 +12,8 @@ export default function LessonPage() {
     const { data, isLoading, error, refetch } = usegetWords(id); // api words get
 
     const words = data?.words
-    console.log(words)
 
-    // const words = [
-    //     // Erkak va Ayollar uchun
-    //     { id: 1, english: 'man', uzbek: 'erkak', example: 'The man is tall.', exampleUz: 'Erkak bo‘ychan.', learned: false },
-
-
+  
     const [filter, setFilter] = useState('all')
 
     // Inputlar uchun state
@@ -29,11 +24,32 @@ export default function LessonPage() {
         exampleUz: ''
     })
 
-    // O‘qib berish funksiyasi
     const speak = (text) => {
-        const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = 'en-US'
-        window.speechSynthesis.speak(utterance)
+        if (!text) return;
+            // Ba'zan eski nutqni to'xtatish kerak
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            const utterance = new window.SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+
+            // Ovozlar yuklanishini kutish uchun promise
+            function setVoiceAndSpeak() {
+                const voices = window.speechSynthesis.getVoices();
+                if (voices && voices.length > 0) {
+                    utterance.voice = voices.find(v => v.lang === 'en-US') || voices[0];
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    // fallback: ovozlar hali yuklanmagan bo‘lsa, biroz kutib qayta urinadi
+                    setTimeout(setVoiceAndSpeak, 100);
+                }
+            }
+
+            // Ba'zi brauzerlarda ovozlar kechikib yuklanadi
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
+            }
+            setVoiceAndSpeak();
     }
 
     // Statistikalar
@@ -75,7 +91,7 @@ export default function LessonPage() {
         <div className="min-h-screen bg-gray-50">
             <Navbar />
 
-            <main className="max-w-5xl mx-auto px-6 md:px-8 lg:px-12 py-10">
+            <main className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-10">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-3xl font-bold">Lesson: Animals — Basic</h1>
                     <Link href="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</Link>
@@ -225,7 +241,7 @@ export default function LessonPage() {
 function Navbar() {
     return (
         <nav className="w-full bg-white shadow-sm sticky top-0 z-40">
-            <div className="max-w-5xl mx-auto px-6 md:px-8 lg:px-12 py-4 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-4 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">WM</div>
                     <span className="font-bold text-gray-800">WordMaster</span>

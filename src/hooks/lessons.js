@@ -77,7 +77,6 @@ export const useDeleteLesson = () => {
 // ---------------- GET LESSONS ALL----------------------
 const getLessonPractice = async ({ queryKey }) => {
     const id = queryKey[1]
-
     const response = await instance.get(`/api/words/lesson/${id}`);
     return response.data
 }
@@ -91,12 +90,28 @@ export const usegetLessonPractice = (id) => {
 }
 
 
+// ---------------- Not practike words----------------------
+const notPractikeWords = async ({ queryKey }) => {
+  const [, id] = queryKey  // destrukturatsiya qilib olaylik
+  console.log(id)
+  const response = await instance.get(`api/words/${id}/unlearned`);
+  return response.data
+}
+
+export const usenotPractikeWords = (id) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['lessons', id],
+    queryFn: notPractikeWords,
+    enabled: !!id, // faqat id bo‘lsa ishlaydi
+  })
+  return { data, isLoading, error, refetch }
+}
+
 
 
 // ----------------- DELETE LESSON ------------------
 
 const updateword = async ({ id, learned }) => {
-    console.log(id, learned, 'salom')
     const response = await instance.patch(`/api/words/${id}/learned`, { learned });
     return response.data
 }
