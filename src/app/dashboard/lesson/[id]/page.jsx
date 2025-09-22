@@ -1,5 +1,7 @@
 'use client'
 import React, { useState } from 'react'
+import { Switch } from '@headlessui/react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useaddWords, usedeleteWord, usegetWords } from '@/hooks/words'
@@ -19,6 +21,72 @@ export default function LessonPage() {
     const words = data?.words
     const [filter, setFilter] = useState('all')
     const [newWord, setNewWord] = useState({ english: '', uzbek: '', example: '', exampleUz: '' })
+    const [autoTranslate, setAutoTranslate] = useState(true);
+
+
+    // Debounce uchun state (english word)
+    const [debouncedEnglish, setDebouncedEnglish] = useState('');
+    React.useEffect(() => {
+        if (!autoTranslate) return;
+        const handler = setTimeout(() => {
+            setDebouncedEnglish(newWord.english);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [newWord.english, autoTranslate]);
+
+    // Debounce uchun state (example sentence)
+    const [debouncedExample, setDebouncedExample] = useState('');
+    React.useEffect(() => {
+        if (!autoTranslate) return;
+        const handler = setTimeout(() => {
+            setDebouncedExample(newWord.example);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [newWord.example, autoTranslate]);
+
+    // TanStack Query bilan tarjima qilish (word)
+    const { data: uzbekTranslation, isFetching: isTranslating } = useQuery({
+        queryKey: ['translate-en-uz', debouncedEnglish],
+        queryFn: async () => {
+            if (!debouncedEnglish) return '';
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=uz&dt=t&q=${encodeURIComponent(debouncedEnglish)}`);
+            const data = await res.json();
+            return data[0][0][0];
+        },
+        enabled: !!debouncedEnglish,
+    });
+
+    // TanStack Query bilan tarjima qilish (example sentence)
+    const { data: uzbekExampleTranslation, isFetching: isExampleTranslating } = useQuery({
+        queryKey: ['translate-en-uz-example', debouncedExample],
+        queryFn: async () => {
+            if (!debouncedExample) return '';
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=uz&dt=t&q=${encodeURIComponent(debouncedExample)}`);
+            const data = await res.json();
+            return data[0][0][0];
+        },
+        enabled: !!debouncedExample,
+    });
+
+    // Uzbek tarjimani inputga joylash (word)
+    React.useEffect(() => {
+        if (!autoTranslate) return;
+        if (debouncedEnglish === '') {
+            setNewWord((prev) => ({ ...prev, uzbek: '' }));
+        } else if (uzbekTranslation && !isTranslating) {
+            setNewWord((prev) => ({ ...prev, uzbek: uzbekTranslation }));
+        }
+    }, [uzbekTranslation, isTranslating, debouncedEnglish, autoTranslate]);
+
+    // Uzbek tarjimani inputga joylash (example sentence)
+    React.useEffect(() => {
+        if (!autoTranslate) return;
+        if (debouncedExample === '') {
+            setNewWord((prev) => ({ ...prev, exampleUz: '' }));
+        } else if (uzbekExampleTranslation && !isExampleTranslating) {
+            setNewWord((prev) => ({ ...prev, exampleUz: uzbekExampleTranslation }));
+        }
+    }, [uzbekExampleTranslation, isExampleTranslating, debouncedExample, autoTranslate]);
 
     const handleDelete = (id) => deleteWordMutation.mutate(id)
 
@@ -129,21 +197,47 @@ export default function LessonPage() {
 
                 {/* Word qo‘shish formasi */}
                 <div className="mb-8 p-6 bg-white rounded-xl shadow">
-                    <h2 className="text-lg sm:text-xl font-semibold mb-4">➕ Add New Word</h2>
+                    <div className="flex items-center gap-4 mb-2">
+                        <h2 className="text-lg sm:text-xl font-semibold">➕ Add New Word</h2>
+                        <Switch
+                            checked={autoTranslate}
+                            onChange={setAutoTranslate}
+                            className={`${autoTranslate ? 'bg-blue-600' : 'bg-gray-300'}
+                                relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+                        >
+                            <span className="sr-only">Auto Translate</span>
+                            <span
+                                className={`${autoTranslate ? 'translate-x-6' : 'translate-x-1'}
+                                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                            />
+                        </Switch>
+                        <span className="text-sm text-gray-500">Auto Translate</span>
+                    </div>
                     <form onSubmit={addWord} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input
-                            type="text"
-                            placeholder="English word"
-                            value={newWord.english}
-                            onChange={(e) => setNewWord({ ...newWord, english: e.target.value })}
-                            className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="English word"
+                                value={newWord.english}
+                                onChange={(e) => setNewWord({ ...newWord, english: e.target.value })}
+                                className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 w-full pr-10"
+                            />
+                            {isTranslating && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-blue-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                </span>
+                            )}
+                        </div>
                         <input
                             type="text"
                             placeholder="Uzbek translation"
                             value={newWord.uzbek}
                             onChange={(e) => setNewWord({ ...newWord, uzbek: e.target.value })}
                             className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            readOnly={isTranslating}
                         />
                         <input
                             type="text"
@@ -158,6 +252,7 @@ export default function LessonPage() {
                             value={newWord.exampleUz}
                             onChange={(e) => setNewWord({ ...newWord, exampleUz: e.target.value })}
                             className="px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 sm:col-span-2"
+                            readOnly={isExampleTranslating}
                         />
                         <button
                             type="submit"
